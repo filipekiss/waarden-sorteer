@@ -8,8 +8,8 @@ const isShadow = (item) => Boolean(item[SHADOW_ITEM_MARKER_PROPERTY_NAME]);
 export const cleanItems = (items) => items.filter((item) => !isShadow(item));
 
 // URL hash format: #u=..&z=..&b=..&n=..&t=..&p=..
-// u = unsorted, z = zeer belangrijk, b = belangrijk, n = niet zo belangrijk,
-// t = top 10 in ranking order, p = top-10 values marked as "voldoende aanwezig".
+// u = unsorted, z = very important, b = important, n = not so important,
+// t = top 10 in ranking order, p = top-10 values marked as "already present enough".
 // Each value is a comma-separated list of value ids.
 export function decodeState(hash) {
   const params = new URLSearchParams(hash.replace(/^#/, ''));

@@ -1,6 +1,6 @@
-# Waarden Sorteertaak
+# Values Sorting Exercise
 
-A small client-side app for the ACT in Actie "Waarden Sorteertaak" exercise. Sort 125 values
+A small client-side app for the ACT in Actie "Values Sorting Exercise" (Waarden Sorteertaak). Sort 125 values
 into three piles, pick your top 10, rank them, and mark which ones are already present in your life.
 
 The full state lives in the URL hash (`#u=…&z=…&b=…&n=…&t=…&p=…`), so the address bar always

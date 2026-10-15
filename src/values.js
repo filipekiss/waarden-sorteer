@@ -1,4 +1,4 @@
-// The 125 values from the ACT in Actie "Waarden Sorteertaak" overview (appendix).
+// The 125 values from the ACT in Actie "Values Sorting Exercise" (Waarden Sorteertaak) overview.
 // A value's id is its 1-based position in this list, which also matches its card number.
 // Links store ids, so renaming a value here does not break existing shared links.
 export const VALUES = [
