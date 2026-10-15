@@ -3,6 +3,9 @@
 A small client-side app for the ACT in Actie "Values Sorting Exercise" (Waarden Sorteertaak). Sort 125 values
 into three piles, pick your top 10, rank them, and mark which ones are already present in your life.
 
+The interface is in English by default. The **Switch to Dutch** button shows the original Dutch
+terms from the worksheet, and the language is kept in the URL (`l=nl`).
+
 The full state lives in the URL hash (`#u=…&z=…&b=…&n=…&t=…&p=…`), so the address bar always
 shows the current layout and the link can be shared. Nothing is sent to or stored on a server.
 

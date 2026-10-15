@@ -1,27 +1,32 @@
 <script>
-  import { dndzone } from 'svelte-dnd-action';
+  import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from 'svelte-dnd-action';
   import { flip } from 'svelte/animate';
-  import { SHADOW_ITEM_MARKER_PROPERTY_NAME } from 'svelte-dnd-action';
   import { decodeState, encodeState, cleanItems, nameOf, MAX_TOP } from './state.js';
+  import { STRINGS } from './i18n.js';
 
   const FLIP_MS = 150;
-  const PILES = [
-    { key: 'zeer', title: 'Very important' },
-    { key: 'belangrijk', title: 'Important' },
-    { key: 'niet', title: 'Not so important' },
+  const PILE_KEYS = [
+    { key: 'zeer' },
+    { key: 'belangrijk' },
+    { key: 'niet' },
   ];
 
   const initial = decodeState(typeof location !== 'undefined' ? location.hash : '');
   let lists = $state.raw(initial.lists);
   let presentIds = $state.raw(initial.present);
+  let lang = $state(initial.lang);
   let copied = $state(false);
+
+  let T = $derived(STRINGS[lang]);
 
   const isShadow = (item) => Boolean(item[SHADOW_ITEM_MARKER_PROPERTY_NAME]);
 
-  // Keep the URL in sync with the current layout, including while a card is being dragged.
+  // Keep the URL in sync with the current layout and language, including while a card is dragged.
   $effect(() => {
-    const hash = '#' + encodeState(lists, presentIds);
+    const hash = '#' + encodeState(lists, presentIds, lang);
     if (location.hash !== hash) history.replaceState(null, '', hash);
+    document.documentElement.lang = T.htmlLang;
+    document.title = T.title;
   });
 
   function onConsider(zone, e) {
@@ -45,6 +50,10 @@
       : [...presentIds, id];
   }
 
+  function toggleLang() {
+    lang = lang === 'en' ? 'nl' : 'en';
+  }
+
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(location.href);
@@ -56,7 +65,7 @@
   }
 
   function reset() {
-    if (!confirm('Start over from scratch?')) return;
+    if (!confirm(T.resetConfirm)) return;
     const fresh = decodeState('');
     lists = fresh.lists;
     presentIds = fresh.present;
@@ -69,21 +78,20 @@
 
 <main>
   <header>
-    <h1>Values Sorting Exercise</h1>
-    <p class="intro">
-      Drag each value into the right pile. Then choose up to {MAX_TOP} values from “Very important”, put them in order, and check which ones are already present enough in your life. The address bar always holds your current layout, so the link you share shows exactly this.
-    </p>
+    <h1>{T.title}</h1>
+    <p class="intro">{T.intro(MAX_TOP)}</p>
     <div class="toolbar">
-      <button onclick={copyLink}>{copied ? 'Link copied' : 'Copy link'}</button>
-      <button class="secondary" onclick={reset}>Start over</button>
-      <span class="counter">{sortedCount} of 125 sorted</span>
+      <button onclick={copyLink}>{copied ? T.copied : T.copy}</button>
+      <button class="secondary" onclick={reset}>{T.reset}</button>
+      <button class="secondary" onclick={toggleLang}>{lang === 'en' ? 'Switch to Dutch' : 'Switch to English'}</button>
+      <span class="counter">{T.counter(sortedCount)}</span>
     </div>
   </header>
 
   <section>
-    <h2>Steps 1–4: sort the values</h2>
+    <h2>{T.step1}</h2>
 
-    <div class="pile-label">To sort ({lists.unsorted.length})</div>
+    <div class="pile-label">{T.toSort} ({lists.unsorted.length})</div>
     <div
       class="zone unsorted"
       use:dndzone={{ items: lists.unsorted, flipDurationMs: FLIP_MS, dropTargetStyle: {} }}
@@ -92,15 +100,15 @@
     >
       {#each lists.unsorted as item (item.id)}
         <div class="card" class:shadow={isShadow(item)} animate:flip={{ duration: FLIP_MS }}>
-          {isShadow(item) ? '' : nameOf(item.id)}
+          {isShadow(item) ? '' : nameOf(item.id, lang)}
         </div>
       {/each}
     </div>
 
     <div class="piles">
-      {#each PILES as pile (pile.key)}
+      {#each PILE_KEYS as pile (pile.key)}
         <div class="pile">
-          <div class="pile-label">{pile.title} ({lists[pile.key].length})</div>
+          <div class="pile-label">{T.piles[pile.key]} ({lists[pile.key].length})</div>
           <div
             class="zone"
             use:dndzone={{ items: lists[pile.key], flipDurationMs: FLIP_MS, dropTargetStyle: {} }}
@@ -109,7 +117,7 @@
           >
             {#each lists[pile.key] as item (item.id)}
               <div class="card" class:shadow={isShadow(item)} animate:flip={{ duration: FLIP_MS }}>
-                {isShadow(item) ? '' : nameOf(item.id)}
+                {isShadow(item) ? '' : nameOf(item.id, lang)}
               </div>
             {/each}
           </div>
@@ -119,10 +127,8 @@
   </section>
 
   <section>
-    <h2>Steps 5–7: your top {MAX_TOP}</h2>
-    <p class="hint">
-      Drag values from “Very important” here. Drag them within this list to change their order. Check the values that are already present enough in your life.
-    </p>
+    <h2>{T.step2(MAX_TOP)}</h2>
+    <p class="hint">{T.hint}</p>
 
     <div
       class="zone ranking"
@@ -140,19 +146,19 @@
         <div class="rank-row" class:shadow={isShadow(item)} animate:flip={{ duration: FLIP_MS }}>
           {#if !isShadow(item)}
             <span class="rank">{index + 1}</span>
-            <span class="rank-name">{nameOf(item.id)}</span>
+            <span class="rank-name">{nameOf(item.id, lang)}</span>
             <label class="present">
               <input
                 type="checkbox"
                 checked={presentIds.includes(item.id)}
                 onchange={() => togglePresent(item.id)}
               />
-              already present enough
+              {T.present}
             </label>
           {/if}
         </div>
       {:else}
-        <div class="empty">No values chosen yet.</div>
+        <div class="empty">{T.empty}</div>
       {/each}
     </div>
   </section>

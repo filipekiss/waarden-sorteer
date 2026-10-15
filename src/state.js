@@ -1,23 +1,25 @@
 import { SHADOW_ITEM_MARKER_PROPERTY_NAME } from 'svelte-dnd-action';
-import { VALUES } from './values.js';
+import { VALUES_EN, VALUES_NL } from './values.js';
 
 export const MAX_TOP = 10;
-export const ALL_IDS = VALUES.map((_, i) => i + 1);
+export const ALL_IDS = VALUES_EN.map((_, i) => i + 1);
 
 const isShadow = (item) => Boolean(item[SHADOW_ITEM_MARKER_PROPERTY_NAME]);
 export const cleanItems = (items) => items.filter((item) => !isShadow(item));
 
 // URL hash format: #u=..&z=..&b=..&n=..&t=..&p=..
 // u = unsorted, z = very important, b = important, n = not so important,
-// t = top 10 in ranking order, p = top-10 values marked as "already present enough".
+// t = top 10 in ranking order, p = top-10 values marked as "already present enough",
+// l = language (en or nl).
 // Each value is a comma-separated list of value ids.
 export function decodeState(hash) {
   const params = new URLSearchParams(hash.replace(/^#/, ''));
+  const lang = params.get('l') === 'nl' ? 'nl' : 'en';
   const parse = (key) =>
     (params.get(key) ?? '')
       .split(',')
       .map(Number)
-      .filter((id) => Number.isInteger(id) && id >= 1 && id <= VALUES.length);
+      .filter((id) => Number.isInteger(id) && id >= 1 && id <= ALL_IDS.length);
 
   const used = new Set();
   const pick = (ids, limit = Infinity) => {
@@ -43,6 +45,7 @@ export function decodeState(hash) {
   const present = [...new Set(parse('p'))].filter((id) => top.includes(id));
 
   return {
+    lang,
     lists: {
       unsorted: toItems(unsorted),
       zeer: toItems(zeer),
@@ -54,7 +57,7 @@ export function decodeState(hash) {
   };
 }
 
-export function encodeState(lists, present) {
+export function encodeState(lists, present, lang = 'en') {
   const ids = (zone) => cleanItems(lists[zone]).map((item) => item.id);
   const topIds = ids('top');
   const parts = {
@@ -64,11 +67,12 @@ export function encodeState(lists, present) {
     n: ids('niet'),
     t: topIds,
     p: present.filter((id) => topIds.includes(id)),
+    l: lang,
   };
   return Object.entries(parts)
-    .map(([key, value]) => `${key}=${value.join(',')}`)
+    .map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`)
     .join('&');
 }
 
 export const toItems = (ids) => ids.map((id) => ({ id }));
-export const nameOf = (id) => VALUES[id - 1] ?? '';
+export const nameOf = (id, lang = 'en') => (lang === 'nl' ? VALUES_NL : VALUES_EN)[id - 1] ?? '';
